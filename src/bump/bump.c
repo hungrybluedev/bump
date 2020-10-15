@@ -98,7 +98,9 @@ char *process_line(char *line_buffer,
   bool found_minor = false;
   bool found_patch = false;
 
-  size_t major, minor, patch;
+  size_t major = 0;
+  size_t minor = 0;
+  size_t patch = 0;
 
   size_t current_value = 0;
   ssize_t last_non_digit_index = -1;
@@ -171,7 +173,7 @@ char *process_line(char *line_buffer,
   }
 
   Version version = {0};
-  size_t version_len;
+  size_t version_len = 0;
 
   initialize_version(&version, major, minor, patch);
 
