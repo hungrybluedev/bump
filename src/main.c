@@ -10,14 +10,23 @@
 #define MAX_LINE_LENGTH 255
 #define INCORRECT_USAGE "Incorrect usage. Type bump --help for more information."
 
-static void store_lowercase(char *destination, const char *source, size_t *len) {
+/**
+ * Convert the characters stored in the source string to lowercase and store
+ * them in the destination buffer. Additionally, store the number of characters
+ * processed in the len pointer.
+ *
+ * @param destination The buffer to store the lowercase string in.
+ * @param source The source string to convert to lowercase.
+ * @param len The size_t pointer to store the number of characters processed.
+ */
+static void convert_to_lowercase_and_store_length(char *destination, const char *source, size_t *len) {
   *len = 0;
   for (char *p = (char *) source; *p; p++, (*len)++) {
     destination[*len] = (char) tolower(*p);
   }
 }
 
-static void store_file_name_in(const char *prompt, char *file_name_buffer, bool input_file) {
+static void store_file_name_in(const char *prompt, char *file_name_buffer, bool for_input) {
   bool we_have_file = false;
   while (true) {
     printf("%s", prompt);
@@ -28,7 +37,7 @@ static void store_file_name_in(const char *prompt, char *file_name_buffer, bool 
       printf("Could not read line. The following error occurred: %s\nTry again.\n", error);
       continue;
     }
-    we_have_file = file_is_valid(buffer, input_file ? "r" : "w");
+    we_have_file = file_is_valid(buffer, for_input ? "r" : "w");
     if (we_have_file) {
       memcpy(file_name_buffer, buffer, len + 1);
       break;
@@ -88,7 +97,7 @@ static bool read_confirmation() {
       continue;
     }
 
-    store_lowercase(buffer, buffer, &len);
+    convert_to_lowercase_and_store_length(buffer, buffer, &len);
 
     if (len == 0) {
       return true;
@@ -173,7 +182,7 @@ static char *process_single_switch(const char *switch_value) {
   char command[MAX_LINE_LENGTH] = {0};
   size_t len;
 
-  store_lowercase(command, switch_value, &len);
+  convert_to_lowercase_and_store_length(command, switch_value, &len);
 
   if (len == 2) {
     // We have an abbreviated switch. It must begin with a '-'
@@ -211,7 +220,7 @@ static char *process_bump_value(char *bump_level,
 
   char buffer[MAX_LINE_LENGTH + 1];
   size_t value_len;
-  store_lowercase(buffer, bump_level_argument, &value_len);
+  convert_to_lowercase_and_store_length(buffer, bump_level_argument, &value_len);
 
   if (*we_have_bump_value) {
     return "Repeated patch level switch.";
@@ -362,7 +371,6 @@ int main(int argc, char const *argv[]) {
   printf("Input file name : %s\n", input_file_name);
   printf("Output file name : %s\n", output_file_name);
   printf("Bump level: %s\n", bump_level);
-
 
 
   return EXIT_SUCCESS;

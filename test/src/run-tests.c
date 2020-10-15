@@ -1,6 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include <bump/bump.h>
 #include <bump/version.h>
@@ -25,11 +23,9 @@
  * the `test` array.
  */
 
-MunitResult bump_patch_0_0_1(const MunitParameter ignored_params[],
-                             void *ignored_data) {
-
+MunitResult bump_patch_0_0_1() {
   Version version = {0};
-  initialize_version(&version, 0, 0, 1);
+  munit_assert_null(initialize_version(&version, 0, 0, 1));
 
   bump_patch(&version);
 
@@ -40,11 +36,9 @@ MunitResult bump_patch_0_0_1(const MunitParameter ignored_params[],
   return MUNIT_OK;
 }
 
-MunitResult bump_patch_0_0_15(const MunitParameter ignored_params[],
-                              void *ignored_data) {
-
+MunitResult bump_patch_0_0_15() {
   Version version = {0};
-  initialize_version(&version, 0, 0, 15);
+  munit_assert_null(initialize_version(&version, 0, 0, 15));
 
   bump_patch(&version);
 
@@ -55,11 +49,9 @@ MunitResult bump_patch_0_0_15(const MunitParameter ignored_params[],
   return MUNIT_OK;
 }
 
-MunitResult bump_minor_0_0_23(const MunitParameter ignored_params[],
-                              void *ignored_data) {
-
+MunitResult bump_minor_0_0_23() {
   Version version = {0};
-  initialize_version(&version, 0, 0, 23);
+  munit_assert_null(initialize_version(&version, 0, 0, 23));
 
   bump_minor(&version);
 
@@ -70,11 +62,9 @@ MunitResult bump_minor_0_0_23(const MunitParameter ignored_params[],
   return MUNIT_OK;
 }
 
-MunitResult bump_major_0_2_8(const MunitParameter ignored_params[],
-                             void *ignored_data) {
-
+MunitResult bump_major_0_2_8() {
   Version version = {0};
-  initialize_version(&version, 0, 2, 8);
+  munit_assert_null(initialize_version(&version, 0, 2, 8));
 
   bump_major(&version);
 
@@ -85,12 +75,74 @@ MunitResult bump_major_0_2_8(const MunitParameter ignored_params[],
   return MUNIT_OK;
 }
 
+MunitResult convert_0_0_1() {
+  char line[16];
+  Version version = {0};
+  munit_assert_null(initialize_version(&version, 0, 0, 1));
+  size_t len;
+
+  munit_assert_null(convert_to_string(&version, line, &len));
+  munit_assert_string_equal(line, "0.0.1");
+  munit_assert(len == 5);
+
+  return MUNIT_OK;
+}
+
+MunitResult convert_4_23_56() {
+  char line[16];
+  Version version = {0};
+  munit_assert_null(initialize_version(&version, 4, 23, 56));
+  size_t len;
+
+  munit_assert_null(convert_to_string(&version, line, &len));
+  munit_assert_string_equal(line, "4.23.56");
+  munit_assert(len == 7);
+
+  return MUNIT_OK;
+}
+
+MunitResult process_line_0_1_1() {
+  char line[10] = {0};
+  const char *input_line = "v0.1.1";
+
+  munit_assert_null(process_line(line, input_line, "patch", NULL));
+  munit_assert_string_equal(line, "v0.1.2");
+
+  return MUNIT_OK;
+}
+
+MunitResult process_line_1_1_51() {
+  char line[21] = {0};
+  const char *input_line = "1.1.51 is the version";
+
+  munit_assert_null(process_line(line, input_line, "minor", NULL));
+  munit_assert_string_equal(line, "1.2.0 is the version");
+
+  return MUNIT_OK;
+}
+
+MunitResult process_two() {
+  char line[42] = {0};
+  const char *input_line = "First we have 1.6.84, then we have 8.16.3!";
+
+  size_t offset;
+  munit_assert_null(process_line(line, input_line, "patch", &offset));
+  munit_assert_string_equal(line, "First we have 1.6.85, then we have 8.16.3!");
+
+  char *new_line = line + offset;
+
+  munit_assert_null(process_line(new_line, new_line, "major", &offset));
+  munit_assert_string_equal(line, "First we have 1.6.85, then we have 9.0.0!");
+
+  return MUNIT_OK;
+}
+
 /*
  * MUNIT TEST CONFIGURATION
  * ========================
  *
  * Boilerplate code for the munit testing library.
- *
+ * The last NULL test item acts as a sentinel.
  */
 
 MunitTest tests[] = {
@@ -102,6 +154,16 @@ MunitTest tests[] = {
          NULL, MUNIT_TEST_OPTION_NONE, NULL},
         {"/bump_major_0_2_8", bump_major_0_2_8, NULL,
          NULL, MUNIT_TEST_OPTION_NONE, NULL},
+        {"/convert_0_0_1", convert_0_0_1, NULL,
+         NULL, MUNIT_TEST_OPTION_NONE, NULL},
+        {"/convert_4_23_56", convert_4_23_56, NULL,
+         NULL, MUNIT_TEST_OPTION_NONE, NULL},
+        {"/process_line_0_1_1", process_line_0_1_1, NULL,
+         NULL, MUNIT_TEST_OPTION_NONE, NULL},
+        {"/process_line_1_1_51", process_line_1_1_51, NULL,
+         NULL, MUNIT_TEST_OPTION_NONE, NULL},
+        {"/process_two", process_two, NULL,
+         NULL, MUNIT_TEST_OPTION_NONE, NULL},
         {NULL, NULL, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL}};
 
 static const MunitSuite suite = {"/bump-test-suite", tests, NULL, 1,
@@ -111,7 +173,6 @@ static const MunitSuite suite = {"/bump-test-suite", tests, NULL, 1,
  * MAIN FUNCTION
  * =============
  */
-
 
 int main(int argc, char *argv[]) {
   printf("Bump project version: %s\n\n", BUMP_VERSION);

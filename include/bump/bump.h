@@ -17,5 +17,8 @@ char *bump_minor(Version *version);
 
 char *bump_patch(Version *version);
 
+char *convert_to_string(Version *version, char *output_buffer, size_t *length);
+
+char *process_line(char *line_buffer, const char *input_line, const char *bump_level, size_t *progress);
 
 #endif//BUMP_H
