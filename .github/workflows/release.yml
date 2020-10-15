@@ -1,0 +1,62 @@
+name: CI for release tags
+
+on:
+  push:
+    tags:
+      - "v*" # matches v1.0.1, v1.2, v2, etc
+
+jobs:
+  once:
+    name: Create single release for all builds
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create a release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: true
+          prerelease: true
+  build:
+    name: Create cross-platform release builds, tag and upload binaries
+    needs: once
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          submodules: true
+
+      - name: Install latest CMake
+        uses: lukka/get-cmake@latest
+
+      - name: Run CMake (generation and build)
+        uses: lukka/run-cmake@v2
+        with:
+          cmakeListsOrSettingsJson: "CMakeListsTxtBasic"
+          cmakeBuildType: Release
+          buildDirectory: "${{ github.workspace }}/Release"
+
+      - name: Zip the asset into a zip file
+        id: zip_asset
+        run: |
+          7z a -tzip ${{ github.workspace }}/Release/bump-${{ matrix.os }}-${{ github.ref }}.zip ${{ github.workspace }}/Release/bump*
+
+      - name: Upload release assets
+        id: upload_assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.once.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/Release/bump-${{ matrix.os }}-${{ github.ref }}.zip
+          asset_name: bump-${{ matrix.os }}-${{ github.ref }}.zip
+          asset_content_type: application/octet-stream

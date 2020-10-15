@@ -1,0 +1,31 @@
+name: Main CI test
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: Create Debug and Release builds with CMake on Ubuntu, MacOS and Windows
+    runs-on: ${{ matrix.os }}
+    if: |
+      !contains(github.event.head_commit.message, '[skip ci]')
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        type: [Debug, Release]
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          submodules: true
+
+      - name: Install latest CMake
+        uses: lukka/get-cmake@latest
+
+      - name: Run CMake (generation and build)
+        uses: lukka/run-cmake@v2
+        with:
+          cmakeListsOrSettingsJson: "CMakeListsTxtBasic"
+          cmakeBuildType: ${{ matrix.type }}
+          buildDirectory: "${{ github.workspace }}/${{ matrix.type }}"
+
+      - name: Run the executable for testing
+        run: ${{ github.workspace }}/${{ matrix.type }}/run-tests
