@@ -191,7 +191,7 @@ char *process_line(char *line_buffer,
   }
 
   if (index < limit) {
-    strcpy(line_buffer + version_starting_index + version_len, input_line + index);
+    strcpy(&line_buffer[version_starting_index + version_len], &input_line[index]);
   }
 
   if (progress) {

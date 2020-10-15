@@ -129,7 +129,7 @@ MunitResult process_two() {
   munit_assert_null(process_line(line, input_line, "patch", &offset));
   munit_assert_string_equal(line, "First we have 1.6.85, then we have 8.16.3!");
 
-  char *new_line = line + offset;
+  char *new_line = &line[offset];
 
   munit_assert_null(process_line(new_line, new_line, "major", &offset));
   munit_assert_string_equal(line, "First we have 1.6.85, then we have 9.0.0!");
