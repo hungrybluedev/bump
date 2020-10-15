@@ -1,5 +1,5 @@
 #include <bump/bump.h>
-#include <limits.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 char *initialize_version(Version *version, const size_t major, const size_t minor, const size_t patch) {
