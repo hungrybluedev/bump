@@ -125,7 +125,7 @@ MunitResult process_two() {
   char line[42] = {0};
   const char *input_line = "First we have 1.6.84, then we have 8.16.3!";
 
-  size_t offset;
+  size_t offset = 0;
   munit_assert_null(process_line(line, input_line, "patch", &offset));
   munit_assert_string_equal(line, "First we have 1.6.85, then we have 8.16.3!");
 
