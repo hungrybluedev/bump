@@ -124,6 +124,7 @@ MunitResult process_line_1_1_51() {
 MunitResult process_two(const MunitParameter params[],
                         void *user_data_or_fixture) {
   char line[50] = {0};
+  char buffer[50] = {0};
   const char *input_line = "First we have 1.6.84, then we have 8.16.3!";
 
   size_t offset = 0;
@@ -131,7 +132,9 @@ MunitResult process_two(const MunitParameter params[],
   munit_assert_string_equal(line, "First we have 1.6.85, then we have 8.16.3!");
   munit_assert(offset == 20);
 
-  munit_assert_null(process_line(line + offset, line + offset, "major", &offset));
+  strcpy(buffer, line);
+
+  munit_assert_null(process_line(line + offset, buffer + offset, "major", &offset));
   munit_assert_string_equal(line, "First we have 1.6.85, then we have 9.0.0!");
   munit_assert(offset == 20);
 
