@@ -123,6 +123,7 @@ MunitResult process_line_1_1_51() {
 
 MunitResult process_two() {
   char line[42] = {0};
+  char buffer[42] = {0};
   const char *input_line = "First we have 1.6.84, then we have 8.16.3!";
 
   printf("\n\t1. Before first extraction.\n");
@@ -133,13 +134,14 @@ MunitResult process_two() {
   munit_assert(offset == 20);
   printf("\t2. After first extraction.\n");
 
-  //  char *new_line = &line[offset];
-  //
-  //  printf("\t3. Before second extraction.\n");
-  //
-  //  munit_assert_null(process_line(new_line, new_line, "major", &offset));
-  //  munit_assert_string_equal(line, "First we have 1.6.85, then we have 9.0.0!");
-  //  printf("\t4. After second extraction.\n");
+  strcpy(buffer, line);
+
+  printf("\t3. Before second extraction.\n");
+
+  munit_assert_null(process_line(line + offset, buffer + offset, "major", &offset));
+  munit_assert_string_equal(line, "First we have 1.6.85, then we have 9.0.0!");
+  munit_assert(offset == 20);
+  printf("\t4. After second extraction.\n");
 
   return MUNIT_OK;
 }
