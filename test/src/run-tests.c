@@ -121,9 +121,10 @@ MunitResult process_line_1_1_51() {
   return MUNIT_OK;
 }
 
-MunitResult process_two() {
-  char line[42] = {0};
-  char buffer[42] = {0};
+MunitResult process_two(const MunitParameter params[],
+                        void *user_data_or_fixture) {
+  char line[50] = {0};
+  char buffer[50] = {0};
   const char *input_line = "First we have 1.6.84, then we have 8.16.3!";
 
   printf("\n\t1. Before first extraction.\n");
