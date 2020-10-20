@@ -54,7 +54,7 @@ target_include_directories(munit PUBLIC test/include/external/munit)
 # input.txt file contains the test cases.
 # output.txt contains the expected results.
 configure_file(test/cases/input.txt data/input.txt COPYONLY)
-configure_file(test/cases/output.txt data/output.txt COPYONLY)
+configure_file(test/cases/expected.txt data/expected.txt COPYONLY)
 
 # Configuration for the test executable
 add_executable(run-tests test/src/run-tests.c)
