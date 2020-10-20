@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_LINE_LENGTH 255
+#define MAX_LINE_LENGTH 511
 #define INCORRECT_USAGE "Incorrect usage. Type bump --help for more information."
 
 /**
