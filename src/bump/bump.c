@@ -204,33 +204,33 @@ char *process_line(char *output_line,
   return NULL;
 }
 
-char *process_file(FILE *input_stream, FILE *output_stream, const char *bump_level, const size_t line_limit) {
-  if (!input_stream) {
-    return "Input stream is empty.";
-  }
-  if (!bump_level) {
-    return "Bump level is empty";
-  }
-
-  char current_line[line_limit];
-  char updated_line[line_limit];
-
-  size_t current_length;
-
-  while (!read_line(input_stream, current_line, &current_length, line_limit)) {
-    char *error;
-    size_t progress = 0;
-    while (progress < current_length) {
-      error = process_line(updated_line + progress,
-                           current_line + progress,
-                           bump_level,
-                           &progress);
-      if (error) {
-        return error;
-      }
-    }
-    fputs(updated_line, output_stream);
-  }
-
-  return NULL;
-}
+//char *process_file(FILE *input_stream, FILE *output_stream, const char *bump_level, const size_t line_limit) {
+//  if (!input_stream) {
+//    return "Input stream is empty.";
+//  }
+//  if (!bump_level) {
+//    return "Bump level is empty";
+//  }
+//
+//  char current_line[line_limit];
+//  char updated_line[line_limit];
+//
+//  size_t current_length;
+//
+//  while (!read_line(input_stream, current_line, &current_length, line_limit)) {
+//    char *error;
+//    size_t progress = 0;
+//    while (progress < current_length) {
+//      error = process_line(updated_line + progress,
+//                           current_line + progress,
+//                           bump_level,
+//                           &progress);
+//      if (error) {
+//        return error;
+//      }
+//    }
+//    fputs(updated_line, output_stream);
+//  }
+//
+//  return NULL;
+//}
