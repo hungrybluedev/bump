@@ -1,4 +1,5 @@
 #include <bump/bump.h>
+#include <bump/fileutil.h>
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -81,11 +82,12 @@ char *convert_to_string(Version *version, char *output_buffer, size_t *length) {
   return NULL;
 }
 
-char *process_line(char *line_buffer,
+char *process_line(char *output_line,
                    const char *input_line,
                    const char *bump_level,
-                   size_t *progress) {
-  if (!line_buffer) {
+                   size_t *input_offset,
+                   size_t *output_offset) {
+  if (!output_line) {
     return "Empty output buffer.";
   }
   if (!input_line) {
@@ -121,7 +123,7 @@ char *process_line(char *line_buffer,
         // Make sure that the digit was not preceded by a '.'
         if (last_non_digit_index != -1 && input_line[last_non_digit_index] == '.') {
           found_major = false;
-          line_buffer[index] = input_line[index];
+          output_line[index] = input_line[index];
         } else {
           found_major = true;
           major = current_value;
@@ -134,7 +136,7 @@ char *process_line(char *line_buffer,
           // We didn't find it. We do not want to change values such as
           // a.b.c.d -> a.b'.c'.d' so we don't consider the previous
           // value as major.
-          line_buffer[index] = input_line[index];
+          output_line[index] = input_line[index];
         } else {
           found_minor = true;
           minor = current_value;
@@ -148,7 +150,7 @@ char *process_line(char *line_buffer,
         if (input_line[last_non_digit_index] != '.') {
           found_major = false;
           found_minor = false;
-          line_buffer[index] = input_line[index];
+          output_line[index] = input_line[index];
         } else {
           patch = current_value;
           found_patch = true;
@@ -156,7 +158,7 @@ char *process_line(char *line_buffer,
         }
       } else {
         // We simply copy over the characters we are not interested in.
-        line_buffer[index] = input_line[index];
+        output_line[index] = input_line[index];
       }
       current_value = 0;
       last_non_digit_index = index;
@@ -187,17 +189,48 @@ char *process_line(char *line_buffer,
     return "Invalid bump version.";
   }
 
-  char *error = convert_to_string(&version, &line_buffer[version_starting_index], &version_len);
+  char *error = convert_to_string(&version, &output_line[version_starting_index], &version_len);
   if (error) {
     return error;
   }
 
   if (index < limit) {
-    strcpy(&line_buffer[version_starting_index + version_len], &input_line[index]);
+    strcpy(&output_line[version_starting_index + version_len], &input_line[index]);
   }
 
-  if (progress) {
-    *progress = version_starting_index + version_len;
+  if (output_offset) {
+    *output_offset = version_starting_index + version_len;
   }
+  return NULL;
+}
+
+char *process_file(FILE *input_stream, FILE *output_stream, const char *bump_level, const size_t line_limit) {
+  if (!input_stream) {
+    return "Input stream is empty.";
+  }
+  if (!bump_level) {
+    return "Bump level is empty";
+  }
+
+  char current_line[line_limit];
+  char updated_line[line_limit];
+
+  size_t current_length;
+
+  while (!read_line(input_stream, current_line, &current_length, line_limit)) {
+    char *error;
+    size_t progress = 0;
+    while (progress < current_length) {
+      error = process_line(updated_line + progress,
+                           current_line + progress,
+                           bump_level,
+                           &progress);
+      if (error) {
+        return error;
+      }
+    }
+    fputs(updated_line, output_stream);
+  }
+
   return NULL;
 }
