@@ -105,18 +105,28 @@ MunitResult process_line_0_1_1() {
   char line[10] = {0};
   const char *input_line = "v0.1.1";
 
-  munit_assert_null(process_line(line, input_line, "patch", NULL));
+  LineState state = {0};
+  initialize_line_state(&state, input_line, line, strlen(input_line));
+
+  munit_assert_null(process_line(&state, "patch"));
   munit_assert_string_equal(line, "v0.1.2");
+  munit_assert_size(state.input_index, ==, 6);
+  munit_assert_size(state.output_index, ==, 6);
 
   return MUNIT_OK;
 }
 
 MunitResult process_line_1_1_51() {
-  char line[21] = {0};
-  const char *input_line = "1.1.51 is the version";
+  char line[40] = {0};
+  const char *input_line = "2.5 is a number 1.1.51 is the version";
 
-  munit_assert_null(process_line(line, input_line, "minor", NULL));
-  munit_assert_string_equal(line, "1.2.0 is the version");
+  LineState state = {0};
+  initialize_line_state(&state, input_line, line, strlen(input_line));
+
+  munit_assert_null(process_line(&state, "minor"));
+  munit_assert_string_equal(line, "2.5 is a number 1.2.0 is the version");
+  munit_assert_size(state.input_index, ==, 22);
+  munit_assert_size(state.output_index, ==, 21);
 
   return MUNIT_OK;
 }
@@ -124,18 +134,22 @@ MunitResult process_line_1_1_51() {
 MunitResult process_two() {
   char line[50] = {0};
   char buffer[50] = {0};
-  const char *input_line = "First we have 1.6.84, then we have 8.16.3!";
+  const char *input_line = "First we (12) have 1.6.84, then we have 8.16.3!";
 
-  size_t offset = 0;
-  munit_assert_null(process_line(line, input_line, "patch", &offset));
-  munit_assert_string_equal(line, "First we have 1.6.85, then we have 8.16.3!");
-  munit_assert(offset == 20);
+  LineState state = {0};
+  initialize_line_state(&state, input_line, line, strlen(input_line));
+
+  munit_assert_null(process_line(&state, "patch"));
+  munit_assert_string_equal(line, "First we (12) have 1.6.85, then we have 8.16.3!");
+  munit_assert_size(state.input_index, ==, 25);
+  munit_assert_size(state.output_index, ==, 25);
 
   strcpy(buffer, line);
 
-  munit_assert_null(process_line(line + offset, buffer + offset, "major", &offset));
-  munit_assert_string_equal(line, "First we have 1.6.85, then we have 9.0.0!");
-  munit_assert(offset == 20);
+  munit_assert_null(process_line(&state, "major"));
+  munit_assert_string_equal(line, "First we (12) have 1.6.85, then we have 9.0.0!");
+  munit_assert_size(state.input_index, ==, 46);
+  munit_assert_size(state.output_index, ==, 45);
 
   return MUNIT_OK;
 }
