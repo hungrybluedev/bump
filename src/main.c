@@ -1,7 +1,6 @@
 #include <bump/fileutil.h>
 #include <bump/version.h>
 #include <ctype.h>
-#include <memory.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
