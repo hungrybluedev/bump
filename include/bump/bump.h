@@ -10,7 +10,23 @@ typedef struct version_struct {
   size_t patch;
 } Version;
 
+typedef struct line_state_struct {
+  const char *input;
+  char *output;
+  size_t input_index;
+  size_t output_index;
+  size_t limit;
+} LineState;
+
+typedef struct file_state_struct {
+  FILE *input;
+  FILE *output;
+  LineState *line_state;
+} FileState;
+
 char *initialize_version(Version *version, size_t major, size_t minor, size_t patch);
+
+char *initialize_line_state(LineState *state, const char *input, char *output, size_t limit);
 
 char *bump_major(Version *version);
 
@@ -20,15 +36,8 @@ char *bump_patch(Version *version);
 
 char *convert_to_string(Version *version, char *output_buffer, size_t *length);
 
-char *process_line(char *output_line,
-                   const char *input_line,
-                   const char *bump_level,
-                   size_t *input_offset,
-                   size_t *output_offset);
+char *process_line(LineState *state, const char *bump_level);
 
-char *process_file(FILE *input_stream,
-                   FILE *output_stream,
-                   const char *bump_level,
-                   size_t line_limit);
+char *process_file(FileState *state);
 
 #endif//BUMP_H

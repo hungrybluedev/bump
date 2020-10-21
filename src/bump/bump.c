@@ -82,155 +82,155 @@ char *convert_to_string(Version *version, char *output_buffer, size_t *length) {
   return NULL;
 }
 
-char *process_line(char *output_line,
-                   const char *input_line,
-                   const char *bump_level,
-                   size_t *input_offset,
-                   size_t *output_offset) {
-  if (!output_line) {
-    return "Empty output buffer.";
+char *initialize_line_state(LineState *state, const char *input, char *output, const size_t limit) {
+  if (!state) {
+    return "Empty pointer received for state";
   }
-  if (!input_line) {
-    return "Empty input string.";
+  if (!input) {
+    return "Input buffer is null";
   }
-  if (!bump_level) {
-    return "Empty bump level.";
+  if (!output) {
+    return "Output buffer is null";
   }
-  bool found_major = false;
-  bool found_minor = false;
-  bool found_patch = false;
-
-  size_t major = 0;
-  size_t minor = 0;
-  size_t patch = 0;
-
-  size_t current_value = 0;
-  ssize_t last_non_digit_index = -1;
-  ssize_t version_starting_index = -1;
-
-  size_t limit = strlen(input_line);
-  size_t index = 0;
-
-  for (; index < limit; ++index) {
-    char c = input_line[index];
-    if (isdigit(c)) {
-      current_value *= 10;
-      current_value += c - '0';
-    } else if (input_line[index] == '.') {
-      // A number has just ended with a '.'
-      // See if our criteria match
-      if (!found_major) {
-        // Make sure that the digit was not preceded by a '.'
-        if (last_non_digit_index != -1 && input_line[last_non_digit_index] == '.') {
-          found_major = false;
-          output_line[index] = input_line[index];
-        } else {
-          found_major = true;
-          major = current_value;
-          version_starting_index = last_non_digit_index + 1;
-        }
-      } else if (!found_minor) {
-        // This time, we want to have a '.' precede the number
-        if (last_non_digit_index != -1 && input_line[last_non_digit_index] != '.') {
-          found_major = false;
-          // We didn't find it. We do not want to change values such as
-          // a.b.c.d -> a.b'.c'.d' so we don't consider the previous
-          // value as major.
-          output_line[index] = input_line[index];
-        } else {
-          found_minor = true;
-          minor = current_value;
-        }
-      }
-      current_value = 0;
-      last_non_digit_index = index;
-    } else {
-      if (found_major && found_minor) {
-        // Again, we want to have a '.' precede the number
-        if (input_line[last_non_digit_index] != '.') {
-          found_major = false;
-          found_minor = false;
-          output_line[index] = input_line[index];
-        } else {
-          patch = current_value;
-          found_patch = true;
-          break;
-        }
-      } else {
-        // We simply copy over the characters we are not interested in.
-        output_line[index] = input_line[index];
-      }
-      current_value = 0;
-      last_non_digit_index = index;
-    }
-  }
-
-  if (!found_patch && index == limit) {
-    // We reached the length. So the patch value is still unassigned
-    patch = current_value;
-  }
-
-  if (!found_major) {
-    return NULL;
-  }
-
-  Version version = {0};
-  size_t version_len = 0;
-
-  initialize_version(&version, major, minor, patch);
-
-  if (strcmp(bump_level, "major") == 0) {
-    bump_major(&version);
-  } else if (strcmp(bump_level, "minor") == 0) {
-    bump_minor(&version);
-  } else if (strcmp(bump_level, "patch") == 0) {
-    bump_patch(&version);
-  } else {
-    return "Invalid bump version.";
-  }
-
-  char *error = convert_to_string(&version, &output_line[version_starting_index], &version_len);
-  if (error) {
-    return error;
-  }
-
-  if (index < limit) {
-    strcpy(&output_line[version_starting_index + version_len], &input_line[index]);
-  }
-
-  if (output_offset) {
-    *output_offset = version_starting_index + version_len;
-  }
+  state->input = input;
+  state->output = output;
+  state->input_index = 0;
+  state->output_index = 0;
+  // The minimum length needed for a version string is 5.
+  // If we have a string length limit smaller than that, we clamp the limit to 0.
+  state->limit = limit < 5 ? 0 : limit;
   return NULL;
 }
 
-//char *process_file(FILE *input_stream, FILE *output_stream, const char *bump_level, const size_t line_limit) {
-//  if (!input_stream) {
-//    return "Input stream is empty.";
-//  }
-//  if (!bump_level) {
-//    return "Bump level is empty";
-//  }
-//
-//  char current_line[line_limit];
-//  char updated_line[line_limit];
-//
-//  size_t current_length;
-//
-//  while (!read_line(input_stream, current_line, &current_length, line_limit)) {
-//    char *error;
-//    size_t progress = 0;
-//    while (progress < current_length) {
-//      error = process_line(updated_line + progress,
-//                           current_line + progress,
-//                           bump_level,
-//                           &progress);
-//      if (error) {
-//        return error;
-//      }
-//    }
-//    fputs(updated_line, output_stream);
-//  }
-//
-//  return NULL;
-//}
+static void keep_going(LineState *state) {
+  if (state->input_index == state->limit) {
+    return;
+  }
+  state->output[state->output_index] = state->input[state->input_index];
+  state->input_index++;
+  state->output_index++;
+}
+
+static size_t extract_decimal_number(LineState *state) {
+  char c;
+  size_t value = 0;
+  while (state->input_index < state->limit && isdigit(c = state->input[state->input_index])) {
+    value *= 10;
+    value += c - '0';
+    state->input_index++;
+  }
+  return value;
+}
+
+char *process_line(LineState *state, const char *bump_level) {
+  if (!state) {
+    return "Null value received for state";
+  }
+  if (state->limit == 0 || state->input_index == state->limit) {
+    return NULL;
+  }
+
+  while (state->input_index < state->limit) {
+    char c = state->input[state->input_index];
+    if (isdigit(c)) {
+      // Start a greedy search for the pattern of "x.y.z" where x, y, and z are decimal numbers
+      size_t major = extract_decimal_number(state);
+      c = state->input[state->input_index];
+
+      if (c != '.') {
+        // We have a normal number. Dump it to the output and proceed normally.
+        int chars_printed = sprintf(state->output + state->output_index, "%zu", major);
+        if (chars_printed < 1) {
+          return "Error occurred while trying to write to output buffer";
+        }
+        state->output_index += chars_printed;
+        keep_going(state);
+        continue;
+      }
+      state->input_index++;
+      if (state->input_index == state->limit) {
+        return NULL;
+      }
+      c = state->input[state->input_index];
+
+      if (!isdigit(c)) {
+        // We have a x. followed by a non-digit
+        keep_going(state);
+        continue;
+      }
+
+      size_t minor = extract_decimal_number(state);
+      if (state->input_index == state->limit) {
+        return NULL;
+      }
+      c = state->input[state->input_index];
+
+
+      if (c != '.') {
+        // We have an input of the form x.y only. No period follows the y
+        int chars_printed = sprintf(state->output + state->output_index, "%zu.%zu", major, minor);
+        if (chars_printed < 1) {
+          return "Error occurred while trying to write to output buffer";
+        }
+        state->output_index += chars_printed;
+        keep_going(state);
+        continue;
+      }
+      state->input_index++;
+      c = state->input[state->input_index];
+
+      if (!isdigit(c)) {
+        // We have a x.y. followed by a non-digit
+        keep_going(state);
+        continue;
+      }
+
+      size_t patch = extract_decimal_number(state);
+      c = state->input[state->input_index];
+
+      if (c == '.') {
+        // We have x.y.z. which is invalid.
+        int chars_printed = sprintf(state->output + state->output_index, "%zu.%zu.%zu", major, minor, patch);
+        if (chars_printed < 1) {
+          return "Error occurred while trying to write to output buffer";
+        }
+        state->output_index += chars_printed;
+        keep_going(state);
+        continue;
+      }
+
+      // We now have all three numbers.
+
+      Version version = {0};
+      initialize_version(&version, major, minor, patch);
+
+      if (strcmp(bump_level, "major") == 0) {
+        bump_major(&version);
+      } else if (strcmp(bump_level, "minor") == 0) {
+        bump_minor(&version);
+      } else if (strcmp(bump_level, "patch") == 0) {
+        bump_patch(&version);
+      } else {
+        return "Invalid bump level";
+      }
+
+      size_t version_len;
+      char *error = convert_to_string(&version, state->output + state->output_index, &version_len);
+      state->output_index += version_len;
+
+      if (error) {
+        return error;
+      }
+
+      if (state->input_index < state->limit) {
+        strcpy(state->output + state->output_index, state->input + state->input_index);
+      }
+
+      // We are done so we exit early
+      return NULL;
+    } else {
+      keep_going(state);
+    }
+  }
+  return NULL;
+}
