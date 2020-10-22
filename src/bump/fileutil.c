@@ -32,14 +32,11 @@ char *read_line(FILE *input, char *buffer, size_t *length, size_t limit) {
   *length = 0;
   memset(buffer, 0, limit);
 
-  while (*length < limit && (ch = fgetc(input)) != '\n') {
-    if (ch == EOF) {
-      return "End of file reached";
-    }
+  while (*length < limit && (ch = fgetc(input)) != '\n' && ch != EOF) {
     buffer[*length] = (char) ch;
     (*length)++;
   }
   buffer[*length] = '\0';
 
-  return NULL;
+  return ch == EOF ? "End of file reached" : NULL;
 }

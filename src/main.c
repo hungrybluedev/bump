@@ -1,3 +1,4 @@
+#include <bump/bump.h>
 #include <bump/fileutil.h>
 #include <bump/version.h>
 #include <ctype.h>
@@ -8,6 +9,7 @@
 
 #define MAX_LINE_LENGTH 511
 #define INCORRECT_USAGE "Incorrect usage. Type bump --help for more information."
+#define INTERMEDIATE_FILE "intermediate.temp"
 
 /**
  * Convert the characters stored in the source string to lowercase and store
@@ -367,10 +369,35 @@ int main(int argc, char const *argv[]) {
     }
   }
 
-  printf("Input file name : %s\n", input_file_name);
-  printf("Output file name : %s\n", output_file_name);
-  printf("Bump level: %s\n", bump_level);
+  bool inplace = strcmp(input_file_name, output_file_name) == 0;
+  if (inplace) {
+    // Check if we can create the file for writing
+    if (!file_is_valid(INTERMEDIATE_FILE, "w")) {
+      puts("Could not create temporary file for writing.");
+      return EXIT_FAILURE;
+    }
 
+    // Mark the output as the temporary.
+    strcpy(output_file_name, INTERMEDIATE_FILE);
+  }
+
+  FileState state = {0};
+  initialize_file_state(&state, input_file_name, output_file_name, bump_level, MAX_LINE_LENGTH);
+
+  process_file(&state);
+
+  if (inplace) {
+    int c;
+    FILE *temp = fopen(INTERMEDIATE_FILE, "r");
+    FILE *dump = fopen(input_file_name, "w");
+
+    while ((c = fgetc(temp)) != EOF) {
+      fputc(c, dump);
+    }
+
+    fclose(temp);
+    fclose(dump);
+  }
 
   return EXIT_SUCCESS;
 }

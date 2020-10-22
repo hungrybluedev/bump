@@ -284,24 +284,33 @@ char *process_file(FileState *state) {
   char input_buffer[state->limit + 1];
   char output_buffer[state->limit + 1];
   size_t len;
+  bool keep_going = true;
 
-  while (!read_line(state->input, input_buffer, &len, state->limit)) {
+  while (keep_going) {
     char *error;
 
+    error = read_line(state->input, input_buffer, &len, state->limit);
+    if (error) {
+      keep_going = false;
+    }
+
+    memset(output_buffer, 0, state->limit);
     LineState line_state = {0};
     error = initialize_line_state(&line_state, input_buffer, output_buffer, state->limit);
     if (error) {
       return error;
     }
 
-    while (line_state.input_index < line_state.limit) {
+    while (line_state.input_index < len) {
       error = process_line(&line_state, state->bump_level);
       if (error) {
         return error;
       }
     }
 
-    fputs(output_buffer, state->output);
+    if (keep_going || strcmp(output_buffer, "\n") != 0) {
+      fprintf(state->output, "%s\n", output_buffer);
+    }
   }
   fclose(state->input);
   fclose(state->output);
