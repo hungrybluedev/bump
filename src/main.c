@@ -397,6 +397,8 @@ int main(int argc, char const *argv[]) {
 
     fclose(temp);
     fclose(dump);
+
+    remove(INTERMEDIATE_FILE);
   }
 
   return EXIT_SUCCESS;
