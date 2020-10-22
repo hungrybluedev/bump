@@ -319,7 +319,7 @@ int main(int argc, char const *argv[]) {
               return EXIT_FAILURE;
             }
             break;
-          case 'p':
+          case 'l':
             error = process_bump_value(bump_level, &we_have_bump_value, argv[index + 1]);
             if (error) {
               puts(error);
@@ -345,7 +345,7 @@ int main(int argc, char const *argv[]) {
             puts(error);
             return EXIT_FAILURE;
           }
-        } else if (strcmp(argv[index], "--patch") == 0) {
+        } else if (strcmp(argv[index], "--level") == 0) {
           error = process_bump_value(bump_level, &we_have_bump_value, argv[index + 1]);
           if (error) {
             puts(error);
