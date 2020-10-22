@@ -156,56 +156,63 @@ MunitResult process_two() {
 }
 
 MunitResult process_test_cases() {
+  // Things to update:
+  // 1. the `count` variable - stores the number of test cases
+  // 2. the `input_lines` array - stores the input lines
+  // 3. the `expected_lines` array - stores 3 types of outputs for each input line. The order is patch, minor, major
+  const size_t count = 5;// <- update this
   const size_t max_line_width = 256;
   char line[max_line_width];
-  char buffer[max_line_width];
+  char copy[max_line_width];
 
-  munit_assert(file_is_valid("data/input.txt", "r"));
-  munit_assert(file_is_valid("data/expected.txt", "r"));
-  munit_assert(file_is_valid("data/output.txt", "w"));
+  const char *bump_levels[] = {"patch", "minor", "major"};
 
-  // Process all lines in the input first
-  FILE *input = fopen("data/input.txt", "r");
-  FILE *output = fopen("data/output.txt", "w");
+  const char *input_lines[] = {
+          "<modelVersion>4.0.0</modelVersion>",
+          "#define VERSION \"0.3.56\"",
+          "2.5 is a number but 1.0.7 is a version",
+          "8.0. is not a version",
+          "Let's put one at the end 9.",
+  };
+  //      ^
+  //      +-- Add new input lines at the end
+  const char *expected_lines[] = {
+          "<modelVersion>4.0.1</modelVersion>",
+          "<modelVersion>4.1.0</modelVersion>",
+          "<modelVersion>5.0.0</modelVersion>",
+          "#define VERSION \"0.3.57\"",
+          "#define VERSION \"0.4.0\"",
+          "#define VERSION \"1.0.0\"",
+          "2.5 is a number but 1.0.8 is a version",
+          "2.5 is a number but 1.1.0 is a version",
+          "2.5 is a number but 2.0.0 is a version",
+          "8.0. is not a version",
+          "8.0. is not a version",
+          "8.0. is not a version",
+          "Let's put one at the end 9.",
+          "Let's put one at the end 9.",
+          "Let's put one at the end 9.",
+  };
+  //      ^
+  //      +-- Add the three variations of the outputs at the end. Remember, the order is
+  //          patch, minor, major
 
-  size_t length = 0;
-  while (!read_line(input, line, &length, max_line_width)) {
-    // We have a line now. So we process it until there is nothing left to
-    // process in this line. We do this for all three bump levels too.
+  for (size_t index = 0; index < count; ++index) {
+    strcpy(line, input_lines[index]);
 
-    char *bump_levels[] = {"patch", "minor", "major"};
+    for (size_t bump_index = 0; bump_index < 3; ++bump_index) {
+      memset(copy, 0, max_line_width);
 
-    for (size_t index = 0; index < 3; ++index) {
-      memset(buffer, 0, max_line_width);
       LineState state = {0};
-      munit_assert_null(initialize_line_state(&state, line, buffer, max_line_width));
+      munit_assert_null(initialize_line_state(&state, line, copy, max_line_width));
 
       while (state.input_index < state.limit) {
-        munit_assert_null(process_line(&state, bump_levels[index]));
+        process_line(&state, bump_levels[bump_index]);
       }
 
-      fprintf(output, "%s\n", buffer);
+      munit_assert_string_equal(expected_lines[index * 3 + bump_index], copy);
     }
   }
-
-  fclose(input);
-  fclose(output);
-
-  // Now that we have the output, we verify that the generated output is the same
-  // as the original output.
-
-  output = fopen("data/output.txt", "r");
-  input = fopen("data/expected.txt", "r");
-
-  int c;
-  while ((c = fgetc(output)) != EOF) {
-    munit_assert_int(fgetc(input), ==, c);
-  }
-
-  fclose(input);
-  fclose(output);
-
-  munit_assert_int(remove("data/output.txt"), ==, 0);
 
   return MUNIT_OK;
 }
