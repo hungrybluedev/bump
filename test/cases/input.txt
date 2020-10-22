@@ -1,2 +1,5 @@
 <modelVersion>4.0.0</modelVersion>
 #define VERSION "0.3.56"
+2.5 is a number but 1.0.7 is a version
+8.0. is not a version
+Let's put one at the end 9.

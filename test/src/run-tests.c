@@ -3,6 +3,7 @@
 #include <bump/bump.h>
 #include <bump/version.h>
 
+#include <bump/fileutil.h>
 #include <munit.h>
 
 /*
@@ -154,6 +155,61 @@ MunitResult process_two() {
   return MUNIT_OK;
 }
 
+MunitResult process_test_cases() {
+  const size_t max_line_width = 256;
+  char line[max_line_width];
+  char buffer[max_line_width];
+
+  munit_assert(file_is_valid("data/input.txt", "r"));
+  munit_assert(file_is_valid("data/expected.txt", "r"));
+  munit_assert(file_is_valid("data/output.txt", "w"));
+
+  // Process all lines in the input first
+  FILE *input = fopen("data/input.txt", "r");
+  FILE *output = fopen("data/output.txt", "w");
+
+  size_t length = 0;
+  while (!read_line(input, line, &length, max_line_width)) {
+    // We have a line now. So we process it until there is nothing left to
+    // process in this line. We do this for all three bump levels too.
+
+    char *bump_levels[] = {"patch", "minor", "major"};
+
+    for (size_t index = 0; index < 3; ++index) {
+      memset(buffer, 0, max_line_width);
+      LineState state = {0};
+      munit_assert_null(initialize_line_state(&state, line, buffer, max_line_width));
+
+      while (state.input_index < state.limit) {
+        munit_assert_null(process_line(&state, bump_levels[index]));
+      }
+
+      fprintf(output, "%s\n", buffer);
+    }
+  }
+
+  fclose(input);
+  fclose(output);
+
+  // Now that we have the output, we verify that the generated output is the same
+  // as the original output.
+
+  output = fopen("data/output.txt", "r");
+  input = fopen("data/expected.txt", "r");
+
+  int c;
+  while ((c = fgetc(output)) != EOF) {
+    munit_assert_int(fgetc(input), ==, c);
+  }
+
+  fclose(input);
+  fclose(output);
+
+  munit_assert_int(remove("data/output.txt"), ==, 0);
+
+  return MUNIT_OK;
+}
+
 /*
  * MUNIT TEST CONFIGURATION
  * ========================
@@ -180,6 +236,8 @@ MunitTest tests[] = {
         {"/process_line_1_1_51", process_line_1_1_51, NULL,
          NULL, MUNIT_TEST_OPTION_NONE, NULL},
         {"/process_two", process_two, NULL,
+         NULL, MUNIT_TEST_OPTION_NONE, NULL},
+        {"/process_test_cases", process_test_cases, NULL,
          NULL, MUNIT_TEST_OPTION_NONE, NULL},
         {NULL, NULL, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL}};
 
