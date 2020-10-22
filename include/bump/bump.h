@@ -22,11 +22,19 @@ typedef struct file_state_struct {
   FILE *input;
   FILE *output;
   LineState *line_state;
+  size_t limit;
+  const char *bump_level;
 } FileState;
 
 char *initialize_version(Version *version, size_t major, size_t minor, size_t patch);
 
 char *initialize_line_state(LineState *state, const char *input, char *output, size_t limit);
+
+char *initialize_file_state(FileState *state,
+                            const char *input_path,
+                            const char *output_path,
+                            const char *bump_level,
+                            size_t limit);
 
 char *bump_major(Version *version);
 

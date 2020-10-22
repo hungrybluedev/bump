@@ -155,6 +155,11 @@ char *process_line(LineState *state, const char *bump_level) {
 
       if (!isdigit(c)) {
         // We have a x. followed by a non-digit
+        int chars_printed = sprintf(state->output + state->output_index, "%zu.", major);
+        if (chars_printed < 1) {
+          return "Error occurred while trying to write to output buffer";
+        }
+        state->output_index += chars_printed;
         keep_going(state);
         continue;
       }
@@ -181,6 +186,11 @@ char *process_line(LineState *state, const char *bump_level) {
 
       if (!isdigit(c)) {
         // We have a x.y. followed by a non-digit
+        int chars_printed = sprintf(state->output + state->output_index, "%zu.%zu.", major, minor);
+        if (chars_printed < 1) {
+          return "Error occurred while trying to write to output buffer";
+        }
+        state->output_index += chars_printed;
         keep_going(state);
         continue;
       }
@@ -232,5 +242,68 @@ char *process_line(LineState *state, const char *bump_level) {
       keep_going(state);
     }
   }
+  return NULL;
+}
+
+char *initialize_file_state(FileState *state,
+                            const char *input_path,
+                            const char *output_path,
+                            const char *bump_level,
+                            const size_t limit) {
+  if (!state) {
+    return "Null pointer received for FileState";
+  }
+  if (!input_path) {
+    return "Empty file path provided for input";
+  }
+  if (!output_path) {
+    return "Empty file path provided for output";
+  }
+  if (!bump_level) {
+    return "Invalid value received for bump level";
+  }
+  if (!file_is_valid(input_path, "r")) {
+    return "Cannot open input file for reading";
+  }
+  if (!file_is_valid(output_path, "w")) {
+    return "Cannot open output file for writing";
+  }
+  state->input = fopen(input_path, "r");
+  state->output = fopen(output_path, "w");
+  state->line_state = NULL;
+  state->bump_level = bump_level;
+  state->limit = limit;
+  return NULL;
+}
+
+char *process_file(FileState *state) {
+  if (!state) {
+    return "File state is null";
+  }
+
+  char input_buffer[state->limit + 1];
+  char output_buffer[state->limit + 1];
+  size_t len;
+
+  while (!read_line(state->input, input_buffer, &len, state->limit)) {
+    char *error;
+
+    LineState line_state = {0};
+    error = initialize_line_state(&line_state, input_buffer, output_buffer, state->limit);
+    if (error) {
+      return error;
+    }
+
+    while (line_state.input_index < line_state.limit) {
+      error = process_line(&line_state, state->bump_level);
+      if (error) {
+        return error;
+      }
+    }
+
+    fputs(output_buffer, state->output);
+  }
+  fclose(state->input);
+  fclose(state->output);
   return NULL;
 }
