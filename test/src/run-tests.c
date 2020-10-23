@@ -3,7 +3,6 @@
 #include <bump/bump.h>
 #include <bump/version.h>
 
-#include <bump/fileutil.h>
 #include <munit.h>
 
 /*
