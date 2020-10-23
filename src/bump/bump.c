@@ -308,8 +308,11 @@ char *process_file(FileState *state) {
       }
     }
 
-    if (keep_going || strcmp(output_buffer, "\n") != 0) {
+    // This is my solution to the last line not ending with a newline problem.
+    if (keep_going || input_buffer[len - 1] == '\n') {
       fprintf(state->output, "%s\n", output_buffer);
+    } else {
+      fprintf(state->output, "%s", output_buffer);
     }
   }
   fclose(state->input);
