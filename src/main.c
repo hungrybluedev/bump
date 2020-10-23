@@ -59,7 +59,7 @@ static void store_bump_level_in(char *bump_level_buffer) {
       continue;
     }
     if (len == 0) {
-      strcpy(buffer, "patch");
+      strcpy(bump_level_buffer, "patch");
       len = strlen("patch");
       we_have_bump = true;
     } else if (len == 1) {
@@ -384,7 +384,8 @@ int main(int argc, char const *argv[]) {
   FileState state = {0};
   initialize_file_state(&state, input_file_name, output_file_name, bump_level, MAX_LINE_LENGTH);
 
-  process_file(&state);
+  while (!process_file(&state))
+    ;
 
   if (inplace) {
     int c;
