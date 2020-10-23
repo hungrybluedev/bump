@@ -58,5 +58,5 @@ jobs:
         with:
           upload_url: ${{ needs.once.outputs.upload_url }}
           asset_path: ${{ github.workspace }}/Release/bump-${{ matrix.os }}-${{ github.ref }}.zip
-          asset_name: bump-${{ matrix.os }}-${{ github.ref }}.zip
+          asset_name: bump-${{ matrix.os }}-${{ github.ref:10 }}.zip
           asset_content_type: application/octet-stream
