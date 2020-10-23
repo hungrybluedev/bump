@@ -21,7 +21,6 @@ typedef struct line_state_struct {
 typedef struct file_state_struct {
   FILE *input;
   FILE *output;
-  LineState *line_state;
   size_t limit;
   const char *bump_level;
 } FileState;
