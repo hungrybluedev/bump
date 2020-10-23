@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 char *initialize_version(Version *version, const size_t major, const size_t minor, const size_t patch) {
@@ -270,7 +269,6 @@ char *initialize_file_state(FileState *state,
   }
   state->input = fopen(input_path, "r");
   state->output = fopen(output_path, "w");
-  state->line_state = NULL;
   state->bump_level = bump_level;
   state->limit = limit;
   return NULL;
@@ -286,7 +284,7 @@ char *process_file(FileState *state) {
   size_t len;
   bool keep_going = true;
 
-  while (keep_going) {
+  while (1) {
     char *error;
 
     error = read_line(state->input, input_buffer, &len, state->limit);
@@ -314,8 +312,13 @@ char *process_file(FileState *state) {
     } else {
       fprintf(state->output, "%s", output_buffer);
     }
+
+    if (!keep_going) {
+      fclose(state->input);
+      fclose(state->output);
+      return "End of file reached";
+    } else {
+      return NULL;
+    }
   }
-  fclose(state->input);
-  fclose(state->output);
-  return NULL;
 }
