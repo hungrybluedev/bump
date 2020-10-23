@@ -25,10 +25,10 @@ jobs:
   build:
     name: Create cross-platform release builds, tag and upload binaries
     needs: once
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}-latest
     strategy:
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        os: [windows, macos, ubuntu]
 
     steps:
       - uses: actions/checkout@v1
