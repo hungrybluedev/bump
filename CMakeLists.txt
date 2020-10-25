@@ -38,7 +38,7 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror")
 if (NOT WIN32)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wextra -Wpedantic")
-endif()
+endif ()
 
 add_library("bump_lib-${PROJECT_VERSION}" STATIC
         src/bump/bump.c
