@@ -89,7 +89,7 @@ The base template is based off of my [starter CMake project](https://github.com/
 
 ### Cross-platform simultaneous release template
 
-The cross-platform release functionality is possible to the Github Actions infrastructure. The basic template is available [here](https://github.com/hungrybluedev/release-test/). Specific people I want to thank are lukka and Simran-B. Visit the [original project](https://github.com/hungrybluedev/release-test/) to learn more about their contributions.
+The cross-platform release functionality is possible due to the Github Actions infrastructure. The basic template is available [here](https://github.com/hungrybluedev/release-test/). Specific people I want to thank are lukka and Simran-B. Visit the [original project](https://github.com/hungrybluedev/release-test/) to learn more about their contributions.
 
 ### Code Review
 
