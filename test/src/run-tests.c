@@ -5,6 +5,8 @@
 
 #include <munit.h>
 
+#define MAX_LINE_WIDTH 256
+
 /*
  *
  * UNIT TEST FUNCTIONS
@@ -160,9 +162,8 @@ MunitResult process_test_cases() {
   // 2. the `input_lines` array - stores the input lines
   // 3. the `expected_lines` array - stores 3 types of outputs for each input line. The order is patch, minor, major
   const size_t count = 5;// <- update this
-  const size_t max_line_width = 256;
-  char line[max_line_width];
-  char copy[max_line_width];
+  char line[MAX_LINE_WIDTH];
+  char copy[MAX_LINE_WIDTH];
 
   const char *bump_levels[] = {"patch", "minor", "major"};
 
@@ -200,10 +201,10 @@ MunitResult process_test_cases() {
     strcpy(line, input_lines[index]);
 
     for (size_t bump_index = 0; bump_index < 3; ++bump_index) {
-      memset(copy, 0, max_line_width);
+      memset(copy, 0, MAX_LINE_WIDTH);
 
       LineState state = {0};
-      munit_assert_null(initialize_line_state(&state, line, copy, max_line_width));
+      munit_assert_null(initialize_line_state(&state, line, copy, MAX_LINE_WIDTH));
 
       while (state.input_index < state.limit) {
         process_line(&state, bump_levels[bump_index]);
