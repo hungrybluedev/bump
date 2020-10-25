@@ -35,6 +35,10 @@ set(CMAKE_C_STANDARD 99)
 # This property can also be set on a per-target basis.
 # However, it is recommended to apply the same standard for all targets
 # in order to ensure compatibility and simplicity.
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror")
+if (NOT WIN32)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wextra -Wpedantic")
+endif()
 
 add_library("bump_lib-${PROJECT_VERSION}" STATIC
         src/bump/bump.c
