@@ -35,7 +35,7 @@ static void store_file_name_in(const char *prompt, char *file_name_buffer, bool 
     size_t len = 0;
     char *error = read_line(stdin, buffer, &len, MAX_LINE_LENGTH);
     if (error) {
-      printf("Could not read line. The following error occurred: %s\nTry again.\n", error);
+      fprintf(stderr, "Could not read line. The following error occurred: %s\nTry again.\n", error);
       continue;
     }
     we_have_file = file_is_valid(buffer, for_input ? "r" : "w");
@@ -55,7 +55,7 @@ static void store_bump_level_in(char *bump_level_buffer) {
     size_t len = 0;
     char *error = read_line(stdin, buffer, &len, MAX_LINE_LENGTH);
     if (error) {
-      printf("Could not read line. The following error occurred: %s\nTry again.\n", error);
+      fprintf(stderr, "Could not read line. The following error occurred: %s\nTry again.\n", error);
       continue;
     }
     if (len == 0) {
@@ -94,7 +94,7 @@ static bool read_confirmation() {
 
     char *error = read_line(stdin, buffer, &len, MAX_LINE_LENGTH);
     if (error) {
-      printf("Could not read line. The following error occurred: %s\nTry again.\n", error);
+      fprintf(stderr, "Could not read line. The following error occurred: %s\nTry again.\n", error);
       continue;
     }
 
@@ -277,7 +277,7 @@ int main(int argc, char const *argv[]) {
     // In all cases, the program will never execute code afterwards outside this block.
     error = process_single_switch(argv[1]);
     if (error) {
-      puts(error);
+      fprintf(stderr, "%s\n", error);
       return EXIT_FAILURE;
     } else {
       return EXIT_SUCCESS;
@@ -285,7 +285,7 @@ int main(int argc, char const *argv[]) {
 
   } else if (argc % 2 == 0) {
     // The pairs are mismatched
-    puts(INCORRECT_USAGE);
+    fprintf(stderr, "%s\n", INCORRECT_USAGE);
     return EXIT_FAILURE;
   } else {
     // The parameters should be present in pairs.
@@ -300,10 +300,11 @@ int main(int argc, char const *argv[]) {
     // Iterate pair wise. We do not care about the order in which
     // the pairs appear. We are only interested in the values, and
     // if they are valid for the switch given.
-    for (size_t index = 1; index < argc; index += 2) {
+    size_t count = (size_t) argc;
+    for (size_t index = 1; index < count; index += 2) {
       // The first of the pair should be a switch
       if (argv[index][0] != '-') {
-        puts(INCORRECT_USAGE);
+        fprintf(stderr, "%s\n", INCORRECT_USAGE);
         return EXIT_FAILURE;
       }
 
@@ -315,26 +316,26 @@ int main(int argc, char const *argv[]) {
           case 'i':
             error = process_input_path_value(input_file_name, &we_have_input_path, argv[index + 1]);
             if (error) {
-              puts(error);
+              fprintf(stderr, "%s\n", error);
               return EXIT_FAILURE;
             }
             break;
           case 'l':
             error = process_bump_value(bump_level, &we_have_bump_value, argv[index + 1]);
             if (error) {
-              puts(error);
+              fprintf(stderr, "%s\n", error);
               return EXIT_FAILURE;
             }
             break;
           case 'o':
             error = process_output_path_value(output_file_name, &we_have_output_path, argv[index + 1]);
             if (error) {
-              puts(error);
+              fprintf(stderr, "%s\n", error);
               return EXIT_FAILURE;
             }
             break;
           default:
-            puts(INCORRECT_USAGE);
+            fprintf(stderr, "%s\n", error);
             return EXIT_FAILURE;
         }
       } else {
@@ -342,26 +343,26 @@ int main(int argc, char const *argv[]) {
         if (strcmp(argv[index], "--input") == 0) {
           error = process_input_path_value(input_file_name, &we_have_input_path, argv[index + 1]);
           if (error) {
-            puts(error);
+            fprintf(stderr, "%s\n", error);
             return EXIT_FAILURE;
           }
         } else if (strcmp(argv[index], "--level") == 0) {
           error = process_bump_value(bump_level, &we_have_bump_value, argv[index + 1]);
           if (error) {
-            puts(error);
+            fprintf(stderr, "%s\n", error);
             return EXIT_FAILURE;
           }
         } else if (strcmp(argv[index], "--output") == 0) {
           error = process_output_path_value(output_file_name, &we_have_output_path, argv[index + 1]);
           if (error) {
-            puts(error);
+            fprintf(stderr, "%s\n", error);
             return EXIT_FAILURE;
           }
         }
       }
     }
     if (!we_have_input_path) {
-      puts("Input file not specified.");
+      fprintf(stderr, "Input file not specified.\n");
       return EXIT_FAILURE;
     }
     if (!we_have_output_path) {
