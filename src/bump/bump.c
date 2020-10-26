@@ -1,6 +1,7 @@
 #include <bump/bump.h>
 #include <bump/fileutil.h>
 #include <ctype.h>
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -70,7 +71,7 @@ char *convert_to_string(Version *version, char *output_buffer, size_t *length) {
   }
   *length = 0;
   int count = sprintf(output_buffer,
-                      "%zu.%zu.%zu",
+                      "%" PRIuMAX ".%" PRIuMAX ".%" PRIuMAX "",
                       version->major,
                       version->minor,
                       version->patch);
@@ -138,7 +139,7 @@ char *process_line(LineState *state, const char *bump_level) {
 
       if (c != '.') {
         // We have a normal number. Dump it to the output and proceed normally.
-        int chars_printed = sprintf(state->output + state->output_index, "%zu", major);
+        int chars_printed = sprintf(state->output + state->output_index, "%" PRIuMAX "", major);
         if (chars_printed < 1) {
           return "Error occurred while trying to write to output buffer";
         }
@@ -154,7 +155,7 @@ char *process_line(LineState *state, const char *bump_level) {
 
       if (!isdigit(c)) {
         // We have a x. followed by a non-digit
-        int chars_printed = sprintf(state->output + state->output_index, "%zu.", major);
+        int chars_printed = sprintf(state->output + state->output_index, "%" PRIuMAX ".", major);
         if (chars_printed < 1) {
           return "Error occurred while trying to write to output buffer";
         }
@@ -172,7 +173,7 @@ char *process_line(LineState *state, const char *bump_level) {
 
       if (c != '.') {
         // We have an input of the form x.y only. No period follows the y
-        int chars_printed = sprintf(state->output + state->output_index, "%zu.%zu", major, minor);
+        int chars_printed = sprintf(state->output + state->output_index, "%" PRIuMAX ".%" PRIuMAX "", major, minor);
         if (chars_printed < 1) {
           return "Error occurred while trying to write to output buffer";
         }
@@ -185,7 +186,7 @@ char *process_line(LineState *state, const char *bump_level) {
 
       if (!isdigit(c)) {
         // We have a x.y. followed by a non-digit
-        int chars_printed = sprintf(state->output + state->output_index, "%zu.%zu.", major, minor);
+        int chars_printed = sprintf(state->output + state->output_index, "%" PRIuMAX ".%" PRIuMAX ".", major, minor);
         if (chars_printed < 1) {
           return "Error occurred while trying to write to output buffer";
         }
@@ -199,7 +200,7 @@ char *process_line(LineState *state, const char *bump_level) {
 
       if (c == '.') {
         // We have x.y.z. which is invalid.
-        int chars_printed = sprintf(state->output + state->output_index, "%zu.%zu.%zu", major, minor, patch);
+        int chars_printed = sprintf(state->output + state->output_index, "%" PRIuMAX ".%" PRIuMAX ".%" PRIuMAX "", major, minor, patch);
         if (chars_printed < 1) {
           return "Error occurred while trying to write to output buffer";
         }
