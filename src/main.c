@@ -43,7 +43,7 @@ static void store_file_name_in(const char *prompt, char *file_name_buffer, bool 
       memcpy(file_name_buffer, buffer, len + 1);
       break;
     }
-    printf("Could not location file with path: \"%s\"\nTry again.\n", buffer);
+    fprintf(stderr, "Could not location file with path: \"%s\"\nTry again.\n", buffer);
   }
 }
 
@@ -81,7 +81,7 @@ static void store_bump_level_in(char *bump_level_buffer) {
     if (we_have_bump) {
       break;
     }
-    printf("Could not identify bump level; use major/minor/patch or M/m/p.\nTry again.\n");
+    fprintf(stderr, "Could not identify bump level; use major/minor/patch or M/m/p.\nTry again.\n");
   }
 }
 
@@ -117,7 +117,7 @@ static bool read_confirmation() {
         return false;
       }
     }
-    printf("Could not understand input.\nTry again.\n");
+    fprintf(stderr, "Could not understand input.\nTry again.\n");
   }
 }
 
@@ -374,7 +374,7 @@ int main(int argc, char const *argv[]) {
   if (inplace) {
     // Check if we can create the file for writing
     if (!file_is_valid(INTERMEDIATE_FILE, "w")) {
-      puts("Could not create temporary file for writing.");
+      fprintf(stderr, "%s\n", "Could not create temporary file for writing.");
       return EXIT_FAILURE;
     }
 
