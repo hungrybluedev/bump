@@ -309,12 +309,11 @@ char *process_file(FileState *state) {
 
     if (keep_going) {
       fprintf(state->output, "%s\n", output_buffer);
-      return NULL;
     } else {
       fprintf(state->output, "%s", output_buffer);
       fclose(state->input);
       fclose(state->output);
-      return "End of file reached";
+      return NULL;
     }
   }
 }

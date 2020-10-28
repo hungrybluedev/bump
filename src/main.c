@@ -385,8 +385,7 @@ int main(int argc, char const *argv[]) {
   FileState state = {0};
   initialize_file_state(&state, input_file_name, output_file_name, bump_level, MAX_LINE_LENGTH);
 
-  while (!process_file(&state))
-    ;
+  process_file(&state);
 
   if (inplace) {
     int c;
