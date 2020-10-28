@@ -28,7 +28,7 @@ char *read_line(FILE *input, char *buffer, size_t *length, size_t limit) {
     return error;
   }
 
-  int ch;
+  int ch = EOF;
   *length = 0;
   memset(buffer, 0, limit);
 
