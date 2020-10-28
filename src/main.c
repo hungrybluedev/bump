@@ -60,7 +60,6 @@ static void store_bump_level_in(char *bump_level_buffer) {
     }
     if (len == 0) {
       strcpy(bump_level_buffer, "patch");
-      len = strlen("patch");
       we_have_bump = true;
     } else if (len == 1) {
       bool major = buffer[0] == 'M';
@@ -73,10 +72,14 @@ static void store_bump_level_in(char *bump_level_buffer) {
       if (minor) strcpy(bump_level_buffer, "minor");
       if (patch) strcpy(bump_level_buffer, "patch");
     } else {
-      if (strcmp(buffer, "major") == 0 || strcmp(buffer, "minor") == 0 || strcmp(buffer, "patch") == 0) {
+      convert_to_lowercase_and_store_length(buffer, buffer, &len);
+      if (len == 5 &&
+          (strcmp(buffer, "major") == 0 ||
+           strcmp(buffer, "minor") == 0 ||
+           strcmp(buffer, "patch") == 0)) {
         we_have_bump = true;
+        strcpy(bump_level_buffer, buffer);
       }
-      memcpy(bump_level_buffer, buffer, len + 1);
     }
     if (we_have_bump) {
       break;
@@ -98,22 +101,22 @@ static bool read_confirmation() {
       continue;
     }
 
-    convert_to_lowercase_and_store_length(buffer, buffer, &len);
-
     if (len == 0) {
       return true;
     } else if (len == 1) {
-      if (buffer[0] == 'y') {
+      int yn = tolower(buffer[0]);
+      if (yn == 'y') {
         return true;
       }
-      if (buffer[0] == 'n') {
+      if (yn == 'n') {
         return false;
       }
     } else {
-      if (strcmp(buffer, "yes") == 0) {
+      convert_to_lowercase_and_store_length(buffer, buffer, &len);
+      if (len == 3 && strcmp(buffer, "yes") == 0) {
         return true;
       }
-      if (strcmp(buffer, "no") == 0) {
+      if (len == 2 && strcmp(buffer, "no") == 0) {
         return false;
       }
     }
