@@ -53,6 +53,7 @@ add_library(munit STATIC
         test/src/external/munit/munit.c
         test/include/external/munit/munit.h
         )
+set_target_properties(munit PROPERTIES CMAKE_C_STANDARD 11)
 target_include_directories(munit PUBLIC test/include/external/munit)
 
 # Configuration for the test executable
