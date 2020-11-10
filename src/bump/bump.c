@@ -1,6 +1,7 @@
 #include <bump/bump.h>
 #include <bump/fileutil.h>
 #include <ctype.h>
+#include <errno.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -111,13 +112,19 @@ static void keep_going(LineState *state) {
   state->output_index++;
 }
 
-static size_t extract_decimal_number(LineState *state) {
-  char c;
-  size_t value = 0;
-  while (state->input_index < state->limit && isdigit(c = state->input[state->input_index])) {
-    value *= 10;
-    value += c - '0';
-    state->input_index++;
+static ssize_t extract_decimal_number(LineState *state) {
+  char *end;
+  ssize_t value = (size_t) strtoul(state->input + state->input_index, &end, 10);
+  if (errno == ERANGE) {
+    // The number exceeded the supported range. Print it out verbatim
+    while (state->input + state->input_index != end) {
+      keep_going(state);
+    }
+    // Reset the error number because we have handled it
+    errno = 0;
+    return -1;
+  } else {
+    state->input_index = end - state->input;
   }
   return value;
 }
@@ -132,9 +139,15 @@ char *process_line(LineState *state, const char *bump_level) {
 
   while (state->input_index < state->limit) {
     char c = state->input[state->input_index];
+    ssize_t result;
     if (isdigit(c)) {
+      errno = 0;
       // Start a greedy search for the pattern of "x.y.z" where x, y, and z are decimal numbers
-      size_t major = extract_decimal_number(state);
+      result = extract_decimal_number(state);
+      if (result == -1) {
+        continue;
+      }
+      size_t major = (size_t) result;
       c = state->input[state->input_index];
 
       if (c != '.') {
@@ -164,7 +177,11 @@ char *process_line(LineState *state, const char *bump_level) {
         continue;
       }
 
-      size_t minor = extract_decimal_number(state);
+      result = extract_decimal_number(state);
+      if (result == -1) {
+        continue;
+      }
+      size_t minor = (size_t) result;
       if (state->input_index == state->limit) {
         return NULL;
       }
@@ -195,7 +212,11 @@ char *process_line(LineState *state, const char *bump_level) {
         continue;
       }
 
-      size_t patch = extract_decimal_number(state);
+      result = extract_decimal_number(state);
+      if (result == -1) {
+        continue;
+      }
+      size_t patch = (size_t) result;
       c = state->input[state->input_index];
 
       if (c == '.') {

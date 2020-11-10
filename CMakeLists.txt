@@ -30,8 +30,8 @@ project(Introduction
         LANGUAGES C
         )
 
-# All targets must follow the C99 standard
-set(CMAKE_C_STANDARD 99)
+# All targets must follow the C11 standard
+set(CMAKE_C_STANDARD 11)
 # This property can also be set on a per-target basis.
 # However, it is recommended to apply the same standard for all targets
 # in order to ensure compatibility and simplicity.

@@ -48,7 +48,9 @@ You can download the pre-built binaries from the [Releases](https://github.com/h
 
 ## 🛠️ Building from source
 
-This project uses CMake to create cross-platform builds. As a pre-requisite, ensure that CMake and a recent C99 compiler is installed.
+This project uses CMake to create cross-platform builds. As a pre-requisite, ensure that CMake and a recent C11 compiler is installed.
+
+> ℹ️ _Technically, this project uses C99 only. C11 is for atomic integer support in munit. So if you do not plan to run the unit tests, you can probably get away with C99. If something breaks, create an issue and I will get back to you._
 
 ### Generate build files
 
