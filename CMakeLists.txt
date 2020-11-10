@@ -30,8 +30,8 @@ project(Introduction
         LANGUAGES C
         )
 
-# All targets must follow the C99 standard
-set(CMAKE_C_STANDARD 99)
+# All targets must follow the C11 standard
+set(CMAKE_C_STANDARD 11)
 # This property can also be set on a per-target basis.
 # However, it is recommended to apply the same standard for all targets
 # in order to ensure compatibility and simplicity.
@@ -53,7 +53,6 @@ add_library(munit STATIC
         test/src/external/munit/munit.c
         test/include/external/munit/munit.h
         )
-set_target_properties(munit PROPERTIES CMAKE_C_STANDARD 11)
 target_include_directories(munit PUBLIC test/include/external/munit)
 
 # Configuration for the test executable
