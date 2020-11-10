@@ -173,6 +173,7 @@ MunitResult process_test_cases() {
           "2.5 is a number but 1.0.7 is a version",
           "8.0. is not a version",
           "Let's put one at the end 9.",
+          "This one overflows 2.424085200077255498724.1. This one doesn't - 2.4.5",
   };
   //      ^
   //      +-- Add new input lines at the end
@@ -192,6 +193,9 @@ MunitResult process_test_cases() {
           "Let's put one at the end 9.",
           "Let's put one at the end 9.",
           "Let's put one at the end 9.",
+          "This one overflows 2.424085200077255498724.1. This one doesn't - 2.4.6",
+          "This one overflows 2.424085200077255498724.1. This one doesn't - 2.5.0",
+          "This one overflows 2.424085200077255498724.1. This one doesn't - 3.0.0",
   };
   //      ^
   //      +-- Add the three variations of the outputs at the end. Remember, the order is
