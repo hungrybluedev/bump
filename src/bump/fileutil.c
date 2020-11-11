@@ -38,5 +38,9 @@ char *read_line(FILE *input, char *buffer, size_t *length, size_t limit) {
   }
   buffer[*length] = '\0';
 
+  if (ferror(input)) {
+    return "An I/O error occurred while trying to read input file.";
+  }
+
   return ch == EOF ? "End of file reached" : NULL;
 }
