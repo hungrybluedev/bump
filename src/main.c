@@ -388,21 +388,52 @@ int main(int argc, char const *argv[]) {
   FileState state = {0};
   initialize_file_state(&state, input_file_name, output_file_name, bump_level, MAX_LINE_LENGTH);
 
-  process_file(&state);
+  error = process_file(&state);
+  if (error) {
+    fprintf(stderr, "Error occurred while trying to process file: %s\n", error);
+  }
 
   if (inplace) {
     int c;
     FILE *temp = fopen(INTERMEDIATE_FILE, "r");
+    if (!temp) {
+      fprintf(stderr, "Could not open temporary file for reading.\n");
+      return EXIT_FAILURE;
+    }
     FILE *dump = fopen(input_file_name, "w");
+    if (!dump) {
+      fprintf(stderr, "Could not open final output file for writing.\n");
+      return EXIT_FAILURE;
+    }
 
     while ((c = fgetc(temp)) != EOF) {
       fputc(c, dump);
     }
+    if (ferror(temp)) {
+      fprintf(stderr, "I/O error occurred while trying to read from temporary file.\n");
+      return EXIT_FAILURE;
+    }
+    if (ferror(dump)) {
+      fprintf(stderr, "I/O error occurred while trying to write to output file.\n");
+      return EXIT_FAILURE;
+    }
 
-    fclose(temp);
-    fclose(dump);
-
-    remove(INTERMEDIATE_FILE);
+    int e;
+    e = fclose(temp);
+    if (e) {
+      fprintf(stderr, "Unable to close temporary file.\n");
+      return EXIT_FAILURE;
+    }
+    e = fclose(dump);
+    if (e) {
+      fprintf(stderr, "Unable to close output file.\n");
+      return EXIT_FAILURE;
+    }
+    e = remove(INTERMEDIATE_FILE);
+    if (e) {
+      fprintf(stderr, "Unable to delete temporary file.\n");
+      return EXIT_FAILURE;
+    }
   }
 
   return EXIT_SUCCESS;
