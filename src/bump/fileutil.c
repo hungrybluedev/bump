@@ -5,9 +5,12 @@
 
 bool file_is_valid(const char *input_path, const char *mode) {
   FILE *input_file = fopen(input_path, mode);
-  bool result = input_file != NULL;
+  bool result = input_file != NULL && !(ferror(input_file));
   if (result) {
-    fclose(input_file);
+    int e = fclose(input_file);
+    if (e) {
+      return false;
+    }
   }
   return result;
 }
