@@ -129,7 +129,7 @@ char *process_line(LineState *state, const char *bump_level) {
   if (state->limit == 0 || state->input_index == state->limit) {
     return NULL;
   }
-
+  char *error;
   while (state->input_index < state->limit) {
     char c = state->input[state->input_index];
     if (isdigit(c)) {
@@ -212,7 +212,10 @@ char *process_line(LineState *state, const char *bump_level) {
       // We now have all three numbers.
 
       Version version = {0};
-      initialize_version(&version, major, minor, patch);
+      error = initialize_version(&version, major, minor, patch);
+      if (error) {
+        return error;
+      }
 
       if (strcmp(bump_level, "major") == 0) {
         bump_major(&version);
@@ -225,7 +228,7 @@ char *process_line(LineState *state, const char *bump_level) {
       }
 
       size_t version_len;
-      char *error = convert_to_string(&version, state->output + state->output_index, &version_len);
+      error = convert_to_string(&version, state->output + state->output_index, &version_len);
       state->output_index += version_len;
 
       if (error) {
@@ -269,9 +272,27 @@ char *initialize_file_state(FileState *state,
     return "Cannot open output file for writing";
   }
   state->input = fopen(input_path, "r");
+  if (!state->input) {
+    return "Could open input stream";
+  }
   state->output = fopen(output_path, "w");
+  if (!state->output) {
+    return "Could open output stream";
+  }
   state->bump_level = bump_level;
   state->limit = limit;
+  return NULL;
+}
+
+static char *close_streams(FileState *state) {
+  int error_code = fclose(state->input);
+  if (error_code) {
+    return "Could not close input stream successfully. fclose failed.";
+  }
+  error_code = fclose(state->output);
+  if (error_code) {
+    return "Could not close output stream successfully. fclose failed.";
+  }
   return NULL;
 }
 
@@ -308,11 +329,33 @@ char *process_file(FileState *state) {
     }
 
     if (keep_going) {
-      fprintf(state->output, "%s\n", output_buffer);
+      int n = fprintf(state->output, "%s\n", output_buffer);
+      if (ferror(state->output)) {
+        return "An I/O error occurred while trying to write to the output file.";
+      }
+      if (n < 0 || ((size_t) n) != (len + 1)) {
+        char *error = close_streams(state);
+        if (error) {
+          return error;
+        }
+        return "Incorrect number of characters written to output stream.";
+      }
     } else {
-      fprintf(state->output, "%s", output_buffer);
-      fclose(state->input);
-      fclose(state->output);
+      int n = fprintf(state->output, "%s", output_buffer);
+      if (ferror(state->output)) {
+        return "An I/O error occurred while trying to write to the output file.";
+      }
+      if (n < 0 || ((size_t) n) != len) {
+        char *error = close_streams(state);
+        if (error) {
+          return error;
+        }
+        return "Incorrect number of characters written to output stream.";
+      }
+      char *error = close_streams(state);
+      if (error) {
+        return error;
+      }
       return NULL;
     }
   }
