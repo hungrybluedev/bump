@@ -7,7 +7,13 @@ bool file_is_valid(const char *input_path, const char *mode) {
   FILE *input_file = fopen(input_path, mode);
   bool result = input_file != NULL;
   if (result) {
-    fclose(input_file);
+    if (ferror(input_file)) {
+      result = false;
+    }
+    int e = fclose(input_file);
+    if (e) {
+      result = false;
+    }
   }
   return result;
 }
